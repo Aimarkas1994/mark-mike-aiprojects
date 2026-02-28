@@ -227,34 +227,108 @@ CREATE TABLE blog_posts (
 );
 ```
 
-## 🌐 Deployment
+## 🌐 Deployment - Render (Recommended Free Option)
 
-### Backend Deployment Options
+### 🚀 Backend Deployment to Render (5 Minutes)
 
-1. **Vercel**: Deploy the backend as a serverless function
-2. **Heroku**: Traditional Node.js deployment
-3. **AWS Lambda**: Serverless deployment
-4. **DigitalOcean/Any VPS**: Traditional server deployment
+Render is the **best free hosting** option for this portfolio API:
 
-### Frontend Deployment
+**Why Render?**
+- ✅ **Completely Free Tier** - No sudden shutdowns
+- ✅ **Persistent Storage** - Perfect for SQLite database  
+- ✅ **SSL Included** - Automatic HTTPS
+- ✅ **Auto-Deployments** - Direct from GitHub
+- ✅ **Health Monitoring** - Built-in service monitoring
+- ✅ **Custom Domains** - Free custom domain support
 
-The frontend is designed for GitHub Pages:
+**Step-by-Step Render Deployment:**
 
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Add full-stack portfolio"
-   git push origin main
+1. **Sign up for Render:**
+   ```
+   Go to: https://render.com
+   Create free account
    ```
 
-2. **Enable GitHub Pages:**
-   - Go to repository settings
-   - Enable GitHub Pages
-   - Select `docs/` folder as source
+2. **Create Web Service:**
+   ```
+   Dashboard → New + → Web Service
+   Connect GitHub: Aimarkas1994/mark-mike-aiprojects
+   Select repository
+   ```
 
-3. **Update API URL:**
+3. **Configure Service:**
+   ```
+   Name: portfolio-api
+   Region: Choose nearest
+   Branch: main
+   Runtime: Node
+   Build Command: cd backend && npm install && npm run init-db
+   Start Command: cd backend && npm start
+   Instance Type: Free
+   ```
+
+4. **Add Environment Variables:**
+   ```
+   NODE_ENV=production
+   PORT=10000
+   FRONTEND_URL=https://aimarkas1994.github.io
+   ```
+
+5. **Add Persistent Storage:**
+   ```
+   Go to Storage tab → Create Disk
+   Name: sqlite-data
+   Mount Path: /opt/render/project/backend
+   Size: 1GB (Free)
+   ```
+
+6. **Deploy:**
+   ```
+   Click "Create Web Service"
+   Wait 2-3 minutes for deployment
+   ```
+
+7. **Test Deployment:**
+   ```
+   Health check: https://your-service-name.onrender.com/health
+   API health: https://your-service-name.onrender.com/api/health
+   ```
+
+### Frontend Deployment (GitHub Pages)
+
+The frontend is already configured for GitHub Pages:
+
+1. **Repository is already set up** - Just push changes
+2. **GitHub Pages enabled** - Serves from `docs/` folder
+3. **Live at**: https://aimarkas1994.github.io/mark-mike-aiprojects/
+
+4. **Update API URL in frontend:**
    - Edit `docs/js/api-client.js`
-   - Change `baseURL` to your deployed backend URL
+   - Change: `return 'https://your-service-name.onrender.com/api';`
+   - Replace with your actual Render URL
+
+### 💰 Total Cost Breakdown
+
+| Service | Cost | Notes |
+|---------|------|-------|
+| **Backend (Render)** | $0/month | Free tier with persistent storage |
+| **Frontend (GitHub Pages)** | $0/month | Always free |
+| **Custom Domain** | $0/month | Free on both services |
+| **SSL Certificate** | $0/month | Included with both |
+| **Total** | **$0/month** | 🎉 Completely free professional hosting |
+
+### 🔄 Auto-Deployments
+
+Once set up, your full-stack app automatically deploys:
+1. **Push code** to GitHub `main` branch
+2. **Render detects** changes and rebuilds backend
+3. **GitHub Pages** automatically updates frontend
+4. **Zero downtime** rolling updates
+5. **Live within minutes** of pushing changes
+
+---
+
+**🎯 Recommendation**: Use Render for backend + GitHub Pages for frontend. This gives you **professional-grade hosting at zero cost** with the best developer experience.
 
 ## 🔄 Development Workflow
 

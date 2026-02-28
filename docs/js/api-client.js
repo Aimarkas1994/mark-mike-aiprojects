@@ -1,7 +1,8 @@
-// Portfolio API Client
+// Portfolio API Client - Optimized for Render deployment
 class PortfolioAPI {
   constructor() {
-    this.baseURL = 'http://localhost:3001/api';
+    // Automatically detect environment and set appropriate URL
+    this.baseURL = this.getApiUrl();
     this.cachedData = {
       projects: null,
       skills: null
@@ -11,6 +12,22 @@ class PortfolioAPI {
       skills: 0
     };
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
+  }
+
+  getApiUrl() {
+    // If running on GitHub Pages, use the deployed Render API
+    if (window.location.hostname.includes('github.io')) {
+      // Replace with your actual Render URL when deployed
+      return 'https://portfolio-api.onrender.com/api';
+    }
+    
+    // If running locally during development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3001/api';
+    }
+    
+    // Fallback for other environments
+    return 'https://portfolio-api.onrender.com/api';
   }
 
   async fetch(endpoint, options = {}) {

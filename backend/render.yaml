@@ -1,0 +1,31 @@
+# Render Service Configuration
+services:
+  - type: web
+    name: portfolio-api
+    env: node
+    branch: main
+    buildCommand: npm install && npm run init-db
+    startCommand: npm start
+    healthCheck:
+      path: /health
+      interval: 30
+      timeout: 10
+      unhealthyThreshold: 3
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/backend
+      sizeGB: 1
+
+# Render will automatically:
+# - Install dependencies from package.json
+# - Run the build command (npm install && npm run init-db)
+# - Start the server with npm start
+# - Monitor health at /health endpoint
+# - Provide persistent storage for SQLite database
+# - Handle SSL termination automatically
+# - Give you a free .onrender.com subdomain

@@ -3,8 +3,17 @@ const path = require('path');
 
 class Database {
   constructor() {
-    this.dbPath = path.join(__dirname, '..', 'database.sqlite');
+    // For Render, use persistent storage path
+    const renderDataDir = process.env.RENDER_EXTERNAL_PATH || '/opt/render/project/backend';
+    this.dbPath = path.join(renderDataDir, 'database.sqlite');
     this.db = null;
+    
+    // Ensure the directory exists
+    const fs = require('fs');
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
   }
 
   connect() {
