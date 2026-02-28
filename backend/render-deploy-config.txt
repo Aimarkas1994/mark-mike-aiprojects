@@ -1,0 +1,20 @@
+=== RENDER DEPLOYMENT CONFIGURATION ===
+Service Name: portfolio-api
+Region: Oregon (or closest to you)
+Branch: main
+Runtime: Node
+Root Directory: backend
+Build Command: npm install && npm run init-db
+Start Command: npm start
+Instance Type: Free
+
+=== ENVIRONMENT VARIABLES ===
+NODE_ENV=production
+PORT=10000
+FRONTEND_URL=https://aimarkas1994.github.io
+
+=== PERSISTENT STORAGE ===
+Disk Name: sqlite-data
+Mount Path: /opt/render/project/backend
+Size: 1GB (Free)
+=== END CONFIG ===
