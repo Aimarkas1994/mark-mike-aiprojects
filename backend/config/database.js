@@ -3,17 +3,30 @@ const path = require('path');
 
 class Database {
   constructor() {
-    // For Render, use persistent storage path
-    const renderDataDir = process.env.RENDER_EXTERNAL_PATH || '/opt/render/project/backend';
-    this.dbPath = path.join(renderDataDir, 'database.sqlite');
-    this.db = null;
-    
-    // Ensure the directory exists
-    const fs = require('fs');
-    const dir = path.dirname(this.dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    // Use different paths for local vs Render
+    if (process.env.RENDER_EXTERNAL_URL) {
+      // We're on Render - use persistent storage
+      const renderDataDir = '/opt/render/project/backend';
+      this.dbPath = path.join(renderDataDir, 'database.sqlite');
+      
+      // Ensure the directory exists (only on Render)
+      try {
+        const fs = require('fs');
+        const dir = path.dirname(this.dbPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      } catch (error) {
+        // If we can't create Render directory, fall back to local
+        console.warn('Could not create Render directory, using local database');
+        this.dbPath = path.join(__dirname, '..', 'database.sqlite');
+      }
+    } else {
+      // Local development
+      this.dbPath = path.join(__dirname, '..', 'database.sqlite');
     }
+    
+    this.db = null;
   }
 
   connect() {

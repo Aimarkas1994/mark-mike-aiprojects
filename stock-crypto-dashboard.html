@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Stock & Crypto Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .search-panel h3, .chart-panel h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .search-form {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .watchlist {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .watchlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .watchlist-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .symbol-info {
+            font-weight: bold;
+        }
+
+        .price-info {
+            text-align: right;
+        }
+
+        .price {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .change {
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+
+        .positive {
+            color: #27ae60;
+        }
+
+        .negative {
+            color: #e74c3c;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .indicator {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .indicator-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .indicator-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .trend-analysis {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .trend-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .trend-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .bullish {
+            background-color: #d5f4e6;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        .bearish {
+            background-color: #fadbd8;
+            color: #e74c3c;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .neutral {
+            background-color: #fef9e7;
+            color: #f39c12;
+            border-left: 4px solid #f39c12;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background-color: #fadbd8;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .indicators {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Advanced Stock & Crypto Analysis Dashboard</h1>
+            <p>Real-time market analysis with technical indicators and trend detection</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="panel search-panel">
+                <h3><i class="fas fa-search"></i> Search & Watchlist</h3>
+                
+                <div class="search-form">
+                    <div class="input-group">
+                        <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., AAPL, BTC-USD)">
+                        <button class="btn" onclick="searchSymbol()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <select id="dataType" style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
+                            <option value="stock">Stock</option>
+                            <option value="crypto">Cryptocurrency</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="watchlist">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">
+                        <i class="fas fa-star"></i> Watchlist
+                    </h4>
+                    <div id="watchlistContainer">
+                        <div class="loading">Loading watchlist...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel chart-panel">
+                <h3><i class="fas fa-chart-area"></i> Price Chart & Analysis</h3>
+                
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+
+                <div class="indicators">
+                    <div class="indicator">
+                        <div class="indicator-value" id="currentPrice">-</div>
+                        <div class="indicator-label">Current Price</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-value" id="rsiValue">-</div>
+                        <div class="indicator-label">RSI (14)</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-value" id="smaValue">-</div>
+                        <div class="indicator-label">SMA (20)</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-value" id="macdValue">-</div>
+                        <div class="indicator-label">MACD</div>
+                    </div>
+                </div>
+
+                <div class="trend-analysis">
+                    <div class="trend-title">
+                        <i class="fas fa-brain"></i> AI Trend Analysis
+                    </div>
+                    <div id="trendAnalysis">
+                        <div class="loading">Analyzing trends...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSymbol = '';
+        let currentDataType = 'stock';
+        let priceChart = null;
+        let watchlist = JSON.parse(localStorage.getItem('watchlist')) || [];
+
+        // API Configuration (using free APIs)
+        const API_CONFIG = {
+            alphaVantage: {
+                key: 'demo', // Replace with your free API key
+                baseUrl: 'https://www.alphavantage.co/query'
+            },
+            coinGecko: {
+                baseUrl: 'https://api.coingecko.com/api/v3'
+            }
+        };
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            loadWatchlist();
+            
+            // Add enter key support for search
+            document.getElementById('symbolInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchSymbol();
+                }
+            });
+        });
+
+        // Initialize Chart.js
+        function initializeChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Price',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Search for a symbol
+        async function searchSymbol() {
+            const symbol = document.getElementById('symbolInput').value.toUpperCase().trim();
+            const dataType = document.getElementById('dataType').value;
+            
+            if (!symbol) {
+                showError('Please enter a symbol');
+                return;
+            }
+
+            currentSymbol = symbol;
+            currentDataType = dataType;
+            
+            showLoading('Searching for data...');
+            
+            try {
+                if (dataType === 'stock') {
+                    await fetchStockData(symbol);
+                } else {
+                    await fetchCryptoData(symbol);
+                }
+                
+                // Add to watchlist if not already there
+                addToWatchlist(symbol, dataType);
+                
+            } catch (error) {
+                showError(`Error fetching data: ${error.message}`);
+            }
+        }
+
+        // Fetch stock data using Alpha Vantage
+        async function fetchStockData(symbol) {
+            const url = `${API_CONFIG.alphaVantage.baseUrl}?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_CONFIG.alphaVantage.key}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data['Error Message']) {
+                    throw new Error('Invalid symbol or API limit reached');
+                }
+                
+                const timeSeries = data['Time Series (Daily)'];
+                if (!timeSeries) {
+                    throw new Error('No data available for this symbol');
+                }
+                
+                // Process the data
+                const processedData = processStockData(timeSeries);
+                updateChart(processedData);
+                calculateTechnicalIndicators(processedData);
+                performTrendAnalysis(processedData);
+                
+            } catch (error) {
+                throw new Error(`Stock data fetch failed: ${error.message}`);
+            }
+        }
+
+        // Fetch crypto data using CoinGecko
+        async function fetchCryptoData(symbol) {
+            // For crypto, we'll use a simple mock for demo purposes
+            // In production, you'd use CoinGecko or another crypto API
+            try {
+                // Generate mock crypto data for demonstration
+                const mockData = generateMockCryptoData(symbol);
+                updateChart(mockData);
+                calculateTechnicalIndicators(mockData);
+                performTrendAnalysis(mockData);
+                
+            } catch (error) {
+                throw new Error(`Crypto data fetch failed: ${error.message}`);
+            }
+        }
+
+        // Process stock data from Alpha Vantage
+        function processStockData(timeSeries) {
+            const data = [];
+            const dates = Object.keys(timeSeries).sort().reverse(); // Most recent first
+            
+            dates.forEach(date => {
+                const dayData = timeSeries[date];
+                data.push({
+                    date: new Date(date),
+                    price: parseFloat(dayData['4. close']),
+                    high: parseFloat(dayData['2. high']),
+                    low: parseFloat(dayData['3. low']),
+                    volume: parseInt(dayData['5. volume'])
+                });
+            });
+            
+            return data.slice(0, 100); // Limit to last 100 days
+        }
+
+        // Generate mock crypto data for demo
+        function generateMockCryptoData(symbol) {
+            const data = [];
+            const basePrice = Math.random() * 50000 + 10000; // Random base price
+            let currentPrice = basePrice;
+            
+            for (let i = 100; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                
+                // Random walk with trend
+                const change = (Math.random() - 0.5) * 0.1;
+                currentPrice = currentPrice * (1 + change);
+                
+                data.push({
+                    date: date,
+                    price: currentPrice,
+                    high: currentPrice * (1 + Math.random() * 0.05),
+                    low: currentPrice * (1 - Math.random() * 0.05),
+                    volume: Math.floor(Math.random() * 1000000) + 100000
+                });
+            }
+            
+            return data;
+        }
+
+        // Update chart with new data
+        function updateChart(data) {
+            if (!data || data.length === 0) return;
+            
+            const labels = data.map(d => d.date);
+            const prices = data.map(d => d.price);
+            
+            priceChart.data.labels = labels;
+            priceChart.data.datasets[0].data = prices;
+            priceChart.data.datasets[0].label = `${currentSymbol} Price`;
+            priceChart.update();
+            
+            // Update current price display
+            const currentPrice = data[0].price;
+            document.getElementById('currentPrice').textContent = `$${currentPrice.toFixed(2)}`;
+        }
+
+        // Calculate technical indicators
+        function calculateTechnicalIndicators(data) {
+            if (!data || data.length < 20) return;
+            
+            // RSI Calculation
+            const rsi = calculateRSI(data);
+            document.getElementById('rsiValue').textContent = rsi.toFixed(2);
+            
+            // SMA Calculation
+            const sma = calculateSMA(data, 20);
+            document.getElementById('smaValue').textContent = `$${sma.toFixed(2)}`;
+            
+            // MACD Calculation (simplified)
+            const macd = calculateMACD(data);
+            document.getElementById('macdValue').textContent = macd.toFixed(4);
+        }
+
+        // Calculate RSI (Relative Strength Index)
+        function calculateRSI(data, period = 14) {
+            if (data.length < period + 1) return 50;
+            
+            const prices = data.map(d => d.price);
+            const gains = [];
+            const losses = [];
+            
+            for (let i = 1; i < prices.length; i++) {
+                const change = prices[i] - prices[i - 1];
+                gains.push(change > 0 ? change : 0);
+                losses.push(change < 0 ? Math.abs(change) : 0);
+            }
+            
+            const avgGain = gains.slice(-period).reduce((a, b) => a + b, 0) / period;
+            const avgLoss = losses.slice(-period).reduce((a, b) => a + b, 0) / period;
+            
+            if (avgLoss === 0) return 100;
+            
+            const rs = avgGain / avgLoss;
+            const rsi = 100 - (100 / (1 + rs));
+            
+            return rsi;
+        }
+
+        // Calculate Simple Moving Average
+        function calculateSMA(data, period) {
+            if (data.length < period) return data[0].price;
+            
+            const prices = data.slice(0, period).map(d => d.price);
+            return prices.reduce((a, b) => a + b, 0) / period;
+        }
+
+        // Calculate MACD (simplified version)
+        function calculateMACD(data) {
+            if (data.length < 26) return 0;
+            
+            const ema12 = calculateEMA(data, 12);
+            const ema26 = calculateEMA(data, 26);
+            
+            return ema12 - ema26;
+        }
+
+        // Calculate Exponential Moving Average
+        function calculateEMA(data, period) {
+            if (data.length < period) return data[0].price;
+            
+            const prices = data.map(d => d.price);
+            const multiplier = 2 / (period + 1);
+            let ema = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
+            
+            for (let i = period; i < prices.length; i++) {
+                ema = (prices[i] - ema) * multiplier + ema;
+            }
+            
+            return ema;
+        }
+
+        // Perform trend analysis
+        function performTrendAnalysis(data) {
+            if (!data || data.length < 10) return;
+            
+            const trends = [];
+            const prices = data.map(d => d.price);
+            
+            // Simple trend detection based on recent performance
+            const recentPrices = prices.slice(0, 7);
+            const olderPrices = prices.slice(7, 14);
+            
+            const recentAvg = recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length;
+            const olderAvg = olderPrices.reduce((a, b) => a + b, 0) / olderPrices.length;
+            
+            const priceChange = ((recentAvg - olderAvg) / olderAvg) * 100;
+            
+            // RSI analysis
+            const rsi = calculateRSI(data);
+            
+            // Generate trend signals
+            if (priceChange > 2 && rsi < 70) {
+                trends.push({
+                    type: 'bullish',
+                    text: 'Strong uptrend detected - bullish momentum with room for growth'
+                });
+            } else if (priceChange < -2 && rsi > 30) {
+                trends.push({
+                    type: 'bearish',
+                    text: 'Downtrend identified - bearish pressure with potential oversold conditions'
+                });
+            } else if (Math.abs(priceChange) < 1) {
+                trends.push({
+                    type: 'neutral',
+                    text: 'Sideways movement - consolidating with no clear trend direction'
+                });
+            }
+            
+            // Volume analysis
+            const recentVolume = data.slice(0, 7).reduce((sum, d) => sum + d.volume, 0) / 7;
+            const olderVolume = data.slice(7, 14).reduce((sum, d) => sum + d.volume, 0) / 7;
+            
+            if (recentVolume > olderVolume * 1.5) {
+                trends.push({
+                    type: 'bullish',
+                    text: 'Increasing volume supports current price movement'
+                });
+            }
+            
+            // Display trends
+            displayTrends(trends);
+        }
+
+        // Display trend analysis
+        function displayTrends(trends) {
+            const container = document.getElementById('trendAnalysis');
+            container.innerHTML = '';
+            
+            if (trends.length === 0) {
+                container.innerHTML = '<div class="loading">No clear trends identified</div>';
+                return;
+            }
+            
+            trends.forEach(trend => {
+                const trendDiv = document.createElement('div');
+                trendDiv.className = `trend-item ${trend.type}`;
+                trendDiv.innerHTML = `<i class="fas fa-${trend.type === 'bullish' ? 'arrow-up' : trend.type === 'bearish' ? 'arrow-down' : 'minus'}"></i> ${trend.text}`;
+                container.appendChild(trendDiv);
+            });
+        }
+
+        // Add symbol to watchlist
+        function addToWatchlist(symbol, dataType) {
+            const existing = watchlist.find(item => item.symbol === symbol && item.dataType === dataType);
+            if (!existing) {
+                watchlist.push({
+                    symbol: symbol,
+                    dataType: dataType,
+                    added: new Date().toISOString()
+                });
+                localStorage.setItem('watchlist', JSON.stringify(watchlist));
+                loadWatchlist();
+            }
+        }
+
+        // Load and display watchlist
+        function loadWatchlist() {
+            const container = document.getElementById('watchlistContainer');
+            
+            if (watchlist.length === 0) {
+                container.innerHTML = '<div class="loading">No symbols in watchlist</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            watchlist.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'watchlist-item';
+                itemDiv.onclick = () => {
+                    document.getElementById('symbolInput').value = item.symbol;
+                    document.getElementById('dataType').value = item.dataType;
+                    searchSymbol();
+                };
+                
+                itemDiv.innerHTML = `
+                    <div class="symbol-info">
+                        <div>${item.symbol}</div>
+                        <div style="font-size: 0.8rem; color: #7f8c8d;">${item.dataType}</div>
+                    </div>
+                    <div class="price-info">
+                        <div class="price" id="price-${item.symbol}">-</div>
+                        <div class="change" id="change-${item.symbol}">-</div>
+                    </div>
+                `;
+                
+                container.appendChild(itemDiv);
+                
+                // Fetch current price for watchlist item
+                fetchWatchlistPrice(item);
+            });
+        }
+
+        // Fetch price for watchlist item
+        async function fetchWatchlistPrice(item) {
+            try {
+                if (item.dataType === 'stock') {
+                    // Mock price for demo
+                    const mockPrice = (Math.random() * 500 + 50).toFixed(2);
+                    const mockChange = (Math.random() * 10 - 5).toFixed(2);
+                    
+                    document.getElementById(`price-${item.symbol}`).textContent = `$${mockPrice}`;
+                    const changeElement = document.getElementById(`change-${item.symbol}`);
+                    changeElement.textContent = `${mockChange > 0 ? '+' : ''}${mockChange}%`;
+                    changeElement.className = `change ${mockChange > 0 ? 'positive' : 'negative'}`;
+                } else {
+                    // Mock crypto price
+                    const mockPrice = (Math.random() * 50000 + 10000).toFixed(2);
+                    const mockChange = (Math.random() * 15 - 7.5).toFixed(2);
+                    
+                    document.getElementById(`price-${item.symbol}`).textContent = `$${mockPrice}`;
+                    const changeElement = document.getElementById(`change-${item.symbol}`);
+                    changeElement.textContent = `${mockChange > 0 ? '+' : ''}${mockChange}%`;
+                    changeElement.className = `change ${mockChange > 0 ? 'positive' : 'negative'}`;
+                }
+            } catch (error) {
+                console.error('Error fetching watchlist price:', error);
+            }
+        }
+
+        // Show loading message
+        function showLoading(message) {
+            // Update chart area to show loading
+            const chartContainer = document.querySelector('.chart-panel');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.textContent = message;
+            loadingDiv.id = 'tempLoading';
+            chartContainer.insertBefore(loadingDiv, chartContainer.firstChild);
+            
+            setTimeout(() => {
+                const tempLoading = document.getElementById('tempLoading');
+                if (tempLoading) tempLoading.remove();
+            }, 3000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const chartPanel = document.querySelector('.chart-panel');
+            const existingError = document.querySelector('.error');
+            if (existingError) existingError.remove();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            chartPanel.insertBefore(errorDiv, chartPanel.firstChild);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) errorDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize with some sample data
+        setTimeout(() => {
+            // Add some sample symbols to watchlist
+            if (watchlist.length === 0) {
+                addToWatchlist('AAPL', 'stock');
+                addToWatchlist('GOOGL', 'stock');
+                addToWatchlist('BTC-USD', 'crypto');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
